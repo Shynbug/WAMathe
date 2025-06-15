@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quaternion and shit</title>
+  <style>
+    :root {
+      --primary-dark: #1e3a8a;
+      --primary-medium: #3b82f6;
+      --primary-light: #dbeafe;
+      --accent-gold: #fbbf24;
+      --accent-green: #10b981;
+      --accent-purple: #8b5cf6;
+      --accent-orange: #f97316;
+      --text-dark: #1f2937;
+      --text-light: #6b7280;
+      --background: #ffffff;
+      --background-light: #f8fafc;
+      --shadow: rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, var(--background-light) 0%, #e0f2fe 100%);
+      color: var(--text-dark);
+      line-height: 1.4;
+      width: 594mm;
+      height: 420mm;
+      padding: 15mm;
+      overflow: hidden;
+    }
+
+    .poster-container {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      grid-template-rows: auto 1fr 1fr auto;
+      gap: 20px;
+      grid-template-areas:
+                "authors title title title"
+                "section1 section2 leitfrage section3"
+                "section1 section2 image section3"
+                "sources sources image reviewers";
+    }
+
+    .box {
+      background: var(--background);
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      border: 2px solid var(--primary-light);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .title-box {
+      grid-area: title;
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary-medium));
+      color: white;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      position: relative;
+    }
+
+    .title-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+      opacity: 0.3;
+    }
+
+    .title {
+      font-size: 2.8em;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      z-index: 1;
+      position: relative;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .authors-box {
+      grid-area: authors;
+      border-left: 6px solid var(--accent-gold);
+      background: linear-gradient(135deg, #fef3c7, #fbbf24);
+    }
+
+    .leitfrage-box {
+      grid-area: leitfrage;
+      border-top: 6px solid var(--accent-purple);
+      background: linear-gradient(135deg, var(--primary-light), #e0f2fe);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+    }
+
+    .leitfrage-box::before {
+      content: '💡';
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 3em;
+      opacity: 0.3;
+    }
+
+    .section1-box {
+      grid-area: section1;
+      transform: rotate(-1deg);
+      border-top: 6px solid var(--primary-medium);
+      background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .section2-box {
+      grid-area: section2;
+      transform: rotate(1.3deg);
+      border-right: 6px solid var(--accent-green);
+      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .section3-box {
+      grid-area: section3;
+      transform: rotate(-0.7deg) scale(1.02);
+      border-left: 6px solid var(--accent-orange);
+      background: linear-gradient(135deg, #fed7aa, #fdba74);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    }
+
+    .sources-box {
+      grid-area: sources;
+      border-bottom: 6px solid var(--accent-green);
+      background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    }
+
+    .reviewers-box {
+      grid-area: reviewers;
+      border-right: 6px solid var(--accent-purple);
+      background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+    }
+
+    .box-title {
+      font-size: 1.4em;
+      font-weight: 700;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .leitfrage-title {
+      font-size: 2em;
+      color: var(--primary-dark);
+      font-weight: 800;
+      margin-bottom: 20px;
+    }
+
+    .leitfrage-text {
+      font-size: 1.4em;
+      color: var(--text-dark);
+      font-style: italic;
+      line-height: 1.6;
+      font-weight: 500;
+    }
+
+    .section-number {
+      background: var(--primary-medium);
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.3em;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .section1-box .section-number { background: var(--primary-medium); }
+    .section2-box .section-number { background: var(--accent-green); }
+    .section3-box .section-number { background: var(--accent-orange); }
+
+    .subsection {
+      margin-bottom: 18px;
+    }
+
+    .subsection-title {
+      font-size: 1.1em;
+      font-weight: 600;
+      color: var(--primary-dark);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .subsection-title::before {
+      content: '▶';
+      font-size: 0.8em;
+    }
+
+    .section1-box .subsection-title::before { color: var(--primary-medium); }
+    .section2-box .subsection-title::before { color: var(--accent-green); }
+    .section3-box .subsection-title::before { color: var(--accent-orange); }
+
+    .subsection-content {
+      color: var(--text-dark);
+      font-size: 0.95em;
+      line-height: 1.5;
+    }
+
+    .subsection-content ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .subsection-content li {
+      margin-bottom: 6px;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .subsection-content li::before {
+      content: '●';
+      font-weight: bold;
+      position: absolute;
+      left: 0;
+    }
+
+    .section1-box .subsection-content li::before { color: var(--primary-medium); }
+    .section2-box .subsection-content li::before { color: var(--accent-green); }
+    .section3-box .subsection-content li::before { color: var(--accent-orange); }
+
+    .authors-title {
+      color: var(--primary-dark);
+      font-size: 1.2em;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .authors-content, .sources-content, .reviewers-content {
+      color: var(--text-dark);
+      font-size: 0.9em;
+      line-height: 1.4;
+    }
+
+    .placeholder-text {
+      color: var(--text-light);
+      font-style: italic;
+      border: 2px dashed var(--primary-light);
+      padding: 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.5);
+      text-align: center;
+    }
+
+    .icon {
+      font-size: 1.2em;
+      margin-right: 5px;
+    }
+
+    @media print {
+      body {
+        width: 594mm;
+        height: 420mm;
+        margin: 0;
+        padding: 15mm;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="poster-container">
+  <div class="box title-box">
+    <h1 class="title">UNTERSUCHUNG DER ÜBERTRAGUNG VON<br>RECHENREGELN AUF ROTATIONEN</h1>
+  </div>
+
+  <div class="box authors-box">
+    <h3 class="box-title"><span class="icon">✍️</span>Autoren</h3>
+    <div class="placeholder-text">
+      <strong>Autor 1:</strong> Milan Anger Conca<br>
+      <strong>Autor 2:</strong> Justus Forstbauer<br>
+      <strong>Autor 3:</strong> Kian Maximilian Moldenhauer<br>
+      <strong>Institution:</strong> Immanuel-Kant-Gymnasium<br>
+      <strong>Fachbereich:</strong> Mathematik
+    </div>
+  </div>
+
+  <div class="box leitfrage-box">
+    <h2 class="leitfrage-title">LEITFRAGE</h2>
+    <p class="leitfrage-text">Wie können algebraische Rechenregeln systematisch auf geometrische Rotationen übertragen und angewendet werden, um komplexe Transformationen zu verstehen und zu berechnen?</p>
+  </div>
+
+  <div class="box section1-box">
+    <div class="box-title">
+      <div class="section-number">1</div>
+      <div>Vektoren</div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Definition/Notation</h3>
+      <div class="subsection-content">
+        <ul>
+          <li>Was ist ein Vektor?</li>
+          <li>Darstellung von Vektoren im R2 und R3</li>
+          <li>Betrag & Richtung</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Operationen</h3>
+      <div class="subsection-content">
+        <ul>
+          <li>Addition/Subtraktion</li>
+          <li>Skalarmultiplikation</li>
+
+          <li>Skalarprodukt und Kreuzprodukt</li>
+
+          <li>Rodrigues-Formel</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="box section2-box">
+    <div class="box-title">
+      <div class="section-number">2</div>
+      <div>Matrizen</div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Definition & Aufbau</h3>
+      <div class="subsection-content">
+        <ul>
+          <li>Kommutativität antikommutativ</li>
+          <li>Transitivität</li>
+          <li>Neutrale/inverse Elemente</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Assoziativität & Distributivität</h3>
+      <div class="subsection-content">
+        <ul>
+          <li>Gruppentheorie SO(3)</li>
+          <li>Komposition von Rotationen</li>
+          <li>Linearität der Operationen</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="box section3-box">
+    <div class="box-title">
+      <div class="section-number">3</div>
+      <div>Quaterionen</div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Quaterionen</h3>
+      <div class="subsection-content">
+        <ul>
+          <li>Numerische Simulationen</li>
+          <li>Fehleranalyse</li>
+          <li>Benchmarking</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <h3 class="subsection-title">Praktische Anwendungen</h3>
+      <div class="subsection-content">
+        <ul>
+          <li>3D-Computergrafik</li>
+          <li>Robotik & Kinematik</li>
+          <li>Aerospace Engineering</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="box sources-box">
+    <h3 class="box-title"><span class="icon">📚</span>QUELLEN</h3>
+    <div class="placeholder-text">
+      [1] Kuipers, J. B. (1999). Quaternions and Rotation Sequences<br>
+      [2] Shepperd, S. W. (1978). Quaternion from rotation matrix<br>
+      [3] Hanson, A. J. (2006). Visualizing Quaternions<br>
+      [4] [Weitere Quellen einfügen]
+    </div>
+  </div>
+
+  <div class="box reviewers-box">
+    <h3 class="box-title"><span class="icon">🔍</span>REVIEWERS</h3>
+    <div class="placeholder-text">
+      <strong>Betreuer:</strong> Herr Kopper<br>
+      <strong>Zweitgutachter:</strong> [klingt proffessionell]<br>
+      <strong>Datum:</strong> 06/2025<br>
+      <strong>Kontakt:</strong> kian.moldenhauer@kant-gymnasium.de
+    </div>
+  </div>
+
+  <div class="box image-box">
+    <div class="image-placeholder">
+      <div class="image-icon">📊</div>
+    </div>
+    <div class="image-text">Platz für Grafiken, Diagramme oder Formeln <img src="image.png" width="473" height="auto"></div>
+  </div>
+</div>
+</body>
+</html>
